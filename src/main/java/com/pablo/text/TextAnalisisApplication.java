@@ -1,4 +1,4 @@
-package com.pablo;
+package com.pablo.text;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
