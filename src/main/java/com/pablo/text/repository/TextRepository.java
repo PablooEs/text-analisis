@@ -7,5 +7,5 @@ import com.pablo.text.model.Text;
 
 @Repository
 public interface TextRepository extends JpaRepository<Text , Long>{
-
+	public Text findByHash(String hash);
 }
