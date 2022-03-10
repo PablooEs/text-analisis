@@ -3,6 +3,8 @@ package com.pablo.text.model;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -32,7 +34,17 @@ public class Text {
 	@ElementCollection(fetch = FetchType.LAZY)
 	@CollectionTable(name = "TEXT_RESULT", joinColumns = @JoinColumn(name = "text_id"))
 	@Column(name = "RESULT")
-	private Set<Result> result = new HashSet<Result>();
+	private List<Result> result = new ArrayList<Result>();
+	@Column(name = "DELETED")
+	private boolean deleted;
+
+	public boolean isDeleted() {
+		return deleted;
+	}
+
+	public void setDeleted(boolean deleted) {
+		this.deleted = deleted;
+	}
 
 	public String getHash() {
 		return hash;
@@ -50,11 +62,11 @@ public class Text {
 		this.chars = chars;
 	}
 
-	public Set<Result> getResult() {
+	public List<Result> getResult() {
 		return result;
 	}
 
-	public void setResult(Set<Result> result) {
+	public void setResult(List<Result> result) {
 		this.result = result;
 	}
 

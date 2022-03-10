@@ -7,10 +7,10 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.codec.binary.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import com.pablo.text.exception.TextException;
 import com.pablo.text.model.Result;
 import com.pablo.text.model.Text;
 import com.pablo.text.model.TextRequest;
@@ -27,10 +28,12 @@ import com.pablo.text.repository.TextRepository;
 public class TextService {
 
 	private final TextRepository textRepository;
+	private final TextException textException;
 
 	@Autowired
 	public TextService(TextRepository textRepository) {
 		this.textRepository = textRepository;
+		this.textException = new TextException();
 	}
 
 	public ResponseEntity<Object> findTextById(Long id) {
@@ -39,11 +42,7 @@ public class TextService {
 			text = textRepository.findById(id).get();
 			return new ResponseEntity<Object>(text, HttpStatus.OK);
 		} catch (Exception e) {
-			Map<String, Object> res = new HashMap<String, Object>();
-			res.put("error", true);
-			res.put("message", "text not found");
-			res.put("code", 404);
-			return new ResponseEntity<Object>(res, HttpStatus.NOT_FOUND);
+			return textException.textNotFound();
 		}
 	}
 
@@ -51,15 +50,16 @@ public class TextService {
 		String hash = getHash(textRequest);
 		Text text = textRepository.findByHash(hash);
 		if (text != null) {
+			System.out.println("El texto ya existia");
 			return new ResponseEntity<Object>(text, HttpStatus.OK);
 		} else {
 			Text newText = new Text();
 			newText.setResult(generateResult(textRequest));
 			newText.setChars(textRequest.getChars());
 			newText.setHash(hash);
+			textRepository.save(newText);
 			return new ResponseEntity<Object>(newText, HttpStatus.OK);
 		}
-
 	}
 
 	public String getHash(TextRequest textRequest) {
@@ -75,11 +75,13 @@ public class TextService {
 		return s;
 	}
 
-	public Set<Result> generateResult(TextRequest textRequest) {
+	public List<Result> generateResult(TextRequest textRequest) {
 		LinkedHashMap<String, Integer> strCountMap = new LinkedHashMap<String, Integer>();
-
+		
+		//Split the text request by chars 
 		List<String> splited = splitText(textRequest.getText(), textRequest.getChars());
-		System.out.println("Splited: " + splited);
+		
+		//Count the occurrences
 		for (String s : splited) {
 			if (strCountMap.containsKey(s)) {
 				strCountMap.put(s, strCountMap.get(s) + 1);
@@ -87,8 +89,12 @@ public class TextService {
 				strCountMap.put(s, 1);
 			}
 		}
-		System.out.println(strCountMap);
-		return null;
+		List<Result> result = new ArrayList<Result>();
+		//Transform the result to the Result Entity
+		for( Map.Entry<String, Integer> entry : strCountMap.entrySet()){
+			result.add(new Result(entry.getKey(),entry.getValue()));  		  
+		}
+		return result;
 	}
 
 	public List<String> splitText(String text, int size) {
@@ -100,6 +106,22 @@ public class TextService {
 			}
 		}
 		return splited;
+	}
+	
+	public ResponseEntity<Object> deleteText(Long id) {
+		Text text = new Text();
+		try {
+			text = textRepository.findById(id).get();
+			if(text!=null && text.isDeleted()!=true) {
+				text.setDeleted(true);
+				textRepository.save(text);
+				return new ResponseEntity<Object>("{}", HttpStatus.OK);
+			}else {
+				return textException.textNotFound();
+			}
+		} catch (Exception e) {
+			return textException.textNotFound();
+		}
 	}
 
 }

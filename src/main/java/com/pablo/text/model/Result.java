@@ -11,6 +11,15 @@ public class Result {
 	private String content;
 	@Column(name="COUNT", nullable=false)
 	private Integer count;
+	
+	public Result() {
+		super();
+	}
+	public Result(String content, Integer count) {
+		super();
+		this.content = content;
+		this.count = count;
+	}
 	public String getContent() {
 		return content;
 	}
