@@ -19,7 +19,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pablo.text.exception.GenericException;
 import com.pablo.text.exception.TextException;
 import com.pablo.text.model.Result;
@@ -51,7 +50,6 @@ public class TextService {
 			if (text.isDeleted() == true) {
 				return textException.textNotFound();
 			} else {
-				LOG.info(text.toString());
 				return new ResponseEntity<Object>(text, HttpStatus.OK);
 			}
 		} catch (Exception e) {
@@ -62,6 +60,7 @@ public class TextService {
 	public ResponseEntity generateText(TextRequest textRequest, Integer chars) {
 		LOG.info("Se testea generateText");
 		try {
+			//Por defecto seteo los chars en 2
 			if (textRequest.getChars() == null || textRequest.getChars() < 2) {
 				textRequest.setChars(chars);
 			}
@@ -70,15 +69,15 @@ public class TextService {
 			Text text = textRepository.findByHash(hash);
 			if (text != null) {
 				LOG.info("El texto ya existia");
-				if(text.isDeleted()==true) {
+				//Si ya existia pero estaba eliminado no reproceso solo lo habilito
+				if (text.isDeleted() == true) {
 					text.setDeleted(false);
 					textRepository.save(text);
-				}		
-				
+				}
+
 				Map<String, Object> existsIn = new HashMap<String, Object>();
 				existsIn.put("id", text.getId());
 				existsIn.put("url", "/text/" + text.getId().toString());
-				LOG.info(existsIn.toString());
 				return new ResponseEntity<Object>(existsIn, HttpStatus.CREATED);
 			} else {
 				Text newText = new Text();
@@ -107,6 +106,7 @@ public class TextService {
 		try {
 			md = MessageDigest.getInstance("MD5");
 			byte[] messageDigest = md.digest(textRequest.getBytes());
+			//Una vez hasheado lo convierto en hexadecimal
 			s = Hex.encodeHexString(messageDigest);
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
@@ -121,7 +121,7 @@ public class TextService {
 		if (textRequest.getChars() > textRequest.getText().length()) {
 			textRequest.setChars(textRequest.getText().length());
 		}
-		// Split the text request by chars
+		// Separo el texto por cantidad de caracteres
 		List<String> splited = splitText(textRequest.getText(), textRequest.getChars());
 
 		// Count the occurrences
@@ -133,7 +133,7 @@ public class TextService {
 			}
 		}
 		List<Result> result = new ArrayList<Result>();
-		// Transform the result to the Result Entity
+		// Transformo el result en la entidad Result
 		for (Map.Entry<String, Integer> entry : strCountMap.entrySet()) {
 			result.add(new Result(entry.getKey(), entry.getValue()));
 		}
@@ -143,7 +143,8 @@ public class TextService {
 	public List<String> splitText(String text, int size) {
 		LOG.info("Se testea splitText");
 		List<String> splited = new ArrayList<>();
-
+		//Separo el texto por la cantidad de caracteres, 
+		//dejando solamente el primer caracter de cada iteracion 
 		for (int start = 0; start < text.length() + 1; start++) {
 			if (start + size < text.length() + 1) {
 				splited.add(text.substring(start, start + size));
@@ -174,6 +175,7 @@ public class TextService {
 		Pageable paging = null;
 		Page<Text> pagedResult = null;
 		try {
+			//Para que la primer pagina sea la 1 de la request
 			if (page > 1) {
 				paging = PageRequest.of(page, size);
 			} else {
@@ -186,14 +188,6 @@ public class TextService {
 			}
 
 			if (pagedResult.hasContent()) {
-				LOG.info("PagedResult: "+ pagedResult.getContent().toString());
-				pagedResult.getContent().forEach(t->{
-					LOG.info("Text: "+ t.toString());
-					for(Result result: t.getResult()) {
-						LOG.info("Result: "+ result.toString());
-					}
-				});
-				
 				return ResponseEntity.status(HttpStatus.OK).body(pagedResult.getContent());
 			} else {
 				return ResponseEntity.status(HttpStatus.OK).body(new ArrayList<Text>());
