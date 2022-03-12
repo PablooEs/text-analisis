@@ -33,7 +33,7 @@ public class TextController {
 	}
 
 	@GetMapping("/text")
-	public ResponseEntity<List<Text>> getAlltext(@RequestParam(required = false) @Min(2) Integer chars,
+	public ResponseEntity<List<Text>> getAlltext(@RequestParam(required = false, defaultValue = "2") @Min(2) Integer chars,
 			@RequestParam(defaultValue = "1") @Min(1) int page,
 			@RequestParam(defaultValue = "10") @Min(10) @Max(100) int rpp) {
 		return textService.getAllText(chars, page, rpp);
