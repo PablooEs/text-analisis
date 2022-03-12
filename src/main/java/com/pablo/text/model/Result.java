@@ -32,4 +32,9 @@ public class Result {
 	public void setCount(Integer count) {
 		this.count = count;
 	}
+	@Override
+	public String toString() {
+		return "Result [content=" + content + ", count=" + count + "]";
+	}
+	
 }

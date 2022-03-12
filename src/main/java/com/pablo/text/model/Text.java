@@ -27,7 +27,7 @@ public class Text {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
-	@Column(name = "HASH", nullable = false, unique = true)
+	@Column(name = "HASH", nullable = false)
 	private String hash;
 	@Column(name = "CHARS", nullable = false)
 	private Integer chars;
@@ -76,6 +76,11 @@ public class Text {
 
 	public void setId(Long id) {
 		this.id = id;
+	}
+
+	@Override
+	public String toString() {
+		return "Text [id=" + id + ", chars=" + chars + ", result=" + result + "]";
 	}
 	
 }
